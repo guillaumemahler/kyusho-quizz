@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14110f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Kyūsho – Quiz</title>
+<style>
+:root{--bg:#14110f;--card:#1e1916;--card2:#2a221e;--ink:#f3ece4;--mute:#a99c90;--red:#d23a2e;--gold:#d9a441;--ok:#4caf6a;--ko:#e05a50;--line:#3a302a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#app{max-width:520px;margin:0 auto;padding:10px 14px calc(24px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:48px;margin-bottom:6px}
+h1{font-size:22px;margin:0;font-weight:700}h1 span{color:var(--red);font-weight:600}
+.stats{display:flex;gap:14px;font-size:15px;color:var(--mute)}.stats b{color:var(--ink)}
+.icon{background:var(--card2);border:1px solid var(--line);color:var(--ink);width:44px;height:44px;border-radius:12px;font-size:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.tag{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--gold);margin-bottom:8px;font-weight:600}
+.prompt{font-size:20px;margin:0 0 6px;line-height:1.3}
+.big{font-size:21px;font-weight:600;margin:6px 0 0}
+.mute{color:var(--mute);margin:0}.small{font-size:13px}
+.kanji,.kj{font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif CJK JP","Noto Serif JP",serif;color:var(--red)}
+.kanji{font-size:36px;line-height:1.1}.kj{font-weight:400}
+.qhead,.vrow{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.qhead>div:first-child,.vrow>div:first-child{flex:1;min-width:0}
+.vrow{align-items:center}
+.njb{display:none;flex:none;background:#fff;border-radius:16px;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+body.nj-on .njb{display:inline-flex}
+.nj{display:block;background-image:var(--nj);background-repeat:no-repeat}
+.opts{display:grid;gap:10px;margin-bottom:12px}
+.opt{width:100%;text-align:left;font:inherit;font-size:16.5px;padding:15px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--card2);color:var(--ink);min-height:54px}
+.opt:disabled{color:var(--ink)}
+.opt.ok{background:#1d3a26;border-color:var(--ok)}.opt.ko{background:#40201d;border-color:var(--ko)}
+.btn{display:block;width:100%;padding:16px;font:inherit;font-size:17px;font-weight:700;border:0;border-radius:14px;background:var(--red);color:#fff;margin-top:10px}
+.btn.sec{background:var(--card2);border:1px solid var(--line);color:var(--ink)}
+.next{position:sticky;bottom:calc(12px + env(safe-area-inset-bottom));box-shadow:0 8px 24px rgba(0,0,0,.6)}
+.link{display:block;margin:18px auto 0;background:none;border:0;color:var(--mute);font:inherit;font-size:13px;text-decoration:underline}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:inherit;font-size:14px;padding:9px 13px;border-radius:999px;border:1.5px solid var(--line);background:var(--card2);color:var(--mute)}
+.chip.on{border-color:var(--red);color:var(--ink);background:#3a1f1b}
+.prog{height:8px;background:var(--card2);border-radius:99px;overflow:hidden;margin:12px 0 6px}
+.prog div{height:100%;background:linear-gradient(90deg,var(--red),var(--gold))}
+.fig{margin:10px 0 4px}
+svg.body{width:100%;height:min(46vh,340px);display:block;border-radius:12px;background:radial-gradient(circle at 50% 35%,#2e2621,#171310);touch-action:manipulation}
+.cap{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;color:var(--mute);margin-top:5px}
+.sil *{fill:#6e5a4c}.sil .limb{fill:none;stroke:#6e5a4c;stroke-linecap:round;stroke-linejoin:round}
+.feat{fill:none;stroke:#3e3129;stroke-width:.7;stroke-linecap:round}.feat .f{fill:#3e3129;stroke:none}
+.dot{fill:#ff4a3a;stroke:#fff;stroke-width:.5}.halo{fill:rgba(255,74,58,.28)}
+.dot.good{fill:#4fd27a}.halo.good{fill:rgba(79,210,122,.3)}
+.cand{fill:rgba(255,255,255,.6);stroke:#000;stroke-opacity:.35;stroke-width:.4}
+.pick{fill:none;stroke:#ff5a4f;stroke-width:1}
+.reveal.good{border-color:#2f6b42}.reveal.bad{border-color:#7a2e29}
+.verdict{font-weight:700;font-size:17px}.reveal.good .verdict{color:var(--ok)}.reveal.bad .verdict{color:var(--ko)}
+.why{margin:6px 0 0;font-size:15px}
+.rh{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.rh0{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.rn{font-size:24px;font-weight:700}
+.info{margin:10px 0 0;display:grid;gap:8px}
+.info dt{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--gold)}
+.info dd{margin:1px 0 0;font-size:15px}
+.warn{margin-top:12px;font-size:13px;background:#3a2a12;border:1px solid #6b4d1f;color:#f0d29a;border-radius:10px;padding:9px 11px}
+details.lx summary{list-style:none;cursor:pointer}details.lx summary::-webkit-details-marker{display:none}
+.zt{margin:16px 2px 8px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ===== Ninjas : planche "ninjas.png" (proportions 3:2, ex. 1536×1024) dans le même dossier ===== */
+const NINJA_SRC="ninjas.png";
+/* Découpe de chaque ninja sur la planche : [x, y, largeur, hauteur] en pixels, base 1536×1024 */
+const NJ={
+ saut:[30,20,330,320],    ramp:[420,120,340,220],  bras:[775,40,305,300],   shuri:[1120,90,410,250],
+ sabre:[30,395,450,285],  protege:[560,395,430,285], medit:[1080,365,380,315],
+ surpris:[20,710,300,280], ko:[360,770,410,220],  joie:[770,700,330,300],  cache:[1200,730,260,270]
+};
+const NJ_MODE={loc:["cache","ramp"],nom:["bras","saut"],corps:["surpris"],tap:["shuri"],ecole:["sabre","medit"]};
+const pick=a=>a[Math.random()*a.length|0];
+function ninja(key,size=68){
+ const [x,y,w,h]=NJ[key],s=size/Math.max(w,h),f=n=>n.toFixed(1)+"px";
+ return `<span class="njb" style="width:${size+10}px;height:${size+10}px"><span class="nj" style="width:${f(w*s)};height:${f(h*s)};background-size:${f(1536*s)} ${f(1024*s)};background-position:${f(-x*s)} ${f(-y*s)}"></span></span>`;
+}
+document.documentElement.style.setProperty("--nj",`url("${NINJA_SRC}")`);
+{const t=new Image();t.onload=()=>document.body.classList.add("nj-on");t.src=NINJA_SRC;}
+
+/* ===== Données ===== */
+const ZONES={
+ tete:{label:"Tête",vb:"52 2 96 96"},
+ cou:{label:"Cou",vb:"52 2 96 96"},
+ tronc:{label:"Tronc",vb:"40 76 120 176"},
+ bras:{label:"Bras",vb:"16 80 168 190"},
+ jambes:{label:"Jambes",vb:"48 214 104 236"}
+};
+const MODES={loc:"Où est-il ?",nom:"Quel nom ?",corps:"Sur le corps",tap:"Touche le point",ecole:"Quelle école ?"};
+const ECOLES={
+ "Gyokko-ryū":"Kosshijutsu : nerfs, muscles et tendons ; mouvements circulaires, travail du pouce.",
+ "Kotō-ryū":"Koppōjutsu : structure osseuse ; déplacements linéaires, courte distance.",
+ "Takagi Yoshin-ryū":"Jūtaijutsu : corps-à-corps, saisies, leviers et projections.",
+ "Togakure-ryū":"Ninjutsu : surprise, sens et évasion (Tonpō).",
+ "Kukishinden-ryū":"Combat en armure (Yoroi) : viser les failles de l'armure."
+};
+
+/* n=nom k=kanji t=traduction z=zone g=groupe (évite les réponses ambiguës) l=localisation d=précision
+   s=structure a=arme du corps e=école f=effet v=variantes y=symbolique w=tête/cou back=arrière xy=coordonnées */
+const P=[
+{n:"Tento",k:"天頭",t:"Tête du Ciel",z:"tete",l:"Sommet du crâne",d:"Jonction des sutures sagittale et coronale (ancienne fontanelle antérieure).",s:"Os du crâne ; l'onde de choc descend vers l'axe cervical.",a:"Fudōken (poing) ou Kōken, frappe verticale de haut en bas.",e:"Kotō-ryū",f:"Ébranle l'axe central : vertiges, étourdissement.",v:"Shinza (« Siège de l'esprit »).",y:"Le point de connexion entre l'homme et le Ciel (Ten).",w:1,xy:[[100,12]]},
+{n:"Tenmon",k:"天門",t:"Porte céleste",z:"tete",g:"nez",l:"Entre les sourcils, au-dessus de l'arête du nez",d:"Glabelle (zone plane entre les sourcils), sinus frontaux et os propres du nez.",s:"Nerf ophtalmique (V1), structure osseuse et cartilagineuse du nez.",a:"Shikanken (phalanges pliées), frappe rectiligne.",e:"Kotō-ryū",f:"Larmoiement réflexe qui brouille la vue (l'effet Kasumi).",w:1,xy:[[100,27]]},
+{n:"Kasumi",k:"霞",t:"Brouillard, brume",z:"tete",l:"Les tempes",d:"Région temporale, de part et d'autre du front.",s:"Nerf temporal.",a:"Shitōken, Shikanken ou Fudōken.",f:"Trouble la vue et l'esprit, d'où le nom « brouillard ».",v:"Komekami ; Gankō quand on vise le nerf temporal.",y:"Le brouillard qui égare le voyageur : l'esprit confus de l'ignorant (Moka).",w:1,xy:[[83,28]]},
+{n:"Hachiyō",k:"八葉",t:"Huit feuilles",z:"tete",l:"Les oreilles",d:"Autour des oreilles et des lobes.",v:"Kaku : la structure osseuse juste derrière l'oreille (le PDF cite aussi « Dokko » pour cet endroit).",w:1,xy:[[78,39]]},
+{n:"Hiryūran",k:"飛龍乱",t:"Chaos du dragon volant",z:"tete",l:"Les yeux (globe oculaire)",a:"Shitōken (bout des doigts) ou projection de poudre (Metsubushi).",e:"Togakure-ryū",f:"Choc sensoriel immédiat qui stoppe l'attaque et empêche la poursuite.",v:"Mekami (les yeux en général).",w:1,xy:[[91,33]]},
+{n:"Menbu",k:"面部",t:"La face",z:"tete",g:"nez",l:"Arête et cartilage du nez",v:"Bisei : la racine du nez, entre les deux yeux.",w:1,xy:[[100,40]]},
+{n:"Jinchū",k:"人中",t:"Centre de l'homme",z:"tete",l:"Sous le nez, au-dessus de la lèvre supérieure",d:"Base de la cloison nasale, sur le sillon de la lèvre supérieure.",a:"Shitōken, Shukōken.",f:"Douleur vive qui fait basculer la tête en arrière. En Kappō, on le presse aussi pour aider au réveil.",v:"Parfois confondu avec Suigetsu, qui désigne pourtant le plexus.",w:1,xy:[[100,48.5]]},
+{n:"Asumi",k:"阿角",t:"Coin de la mâchoire",z:"tete",l:"Derrière l'angle de la mâchoire, sous le lobe de l'oreille",d:"Fossette rétro-mandibulaire, juste en arrière de l'angle inférieur de la mâchoire.",s:"Nerf facial (VII) à sa sortie du crâne, artère carotide externe.",a:"Boshiken (pouce), angle diagonal vers l'avant et légèrement vers le haut.",e:"Gyokko-ryū",f:"Décharge nerveuse qui « fige » les jambes et fait perdre les appuis.",w:1,xy:[[82,52]]},
+{n:"Shinza",k:"神座",t:"Siège de l'esprit",z:"tete",l:"Derrière l'oreille (mastoïde)",d:"Zone osseuse juste derrière le lobe de l'oreille (os temporal, mastoïde).",s:"Proximité de l'oreille interne et du système de l'équilibre.",a:"Pouce (Boshiken) ou doigts durcis.",e:"Togakure-ryū",f:"Perturbe l'équilibre : vertige, chute sur le côté.",v:"Dans la liste générale du PDF, « Shinza » est aussi donné comme autre nom de Tento.",w:1,back:1,xy:[[74,46]]},
+{n:"Dokko",k:"独骨",t:"Os unique",z:"cou",l:"La pomme d'Adam",d:"Cartilage thyroïde, à la base de la gorge.",s:"Larynx.",a:"Doigts enfoncés lors des étranglements.",e:"Takagi Yoshin-ryū",f:"Force la soumission ou la perte de posture.",v:"Shokkotsu ; Kōtō (larynx).",w:1,xy:[[100,68]]},
+{n:"Murasame",k:"村雨",t:"Pluie du village",z:"cou",l:"Côté gauche du cou (carotide)",d:"Artère carotide, sur le côté gauche du partenaire.",s:"Système vasculaire du cou.",a:"Shutō (tranchant de la main) ou coude (Hachikuken).",f:"Zone vasculaire ciblée par les étranglements.",v:"Selon les lignées, interchangeable avec Matsukaze (côtés gauche/droit du cou).",y:"La pluie sur le village : le flux continu et invisible de l'énergie vitale (Ki).",w:1,xy:[[109,67]]},
+{n:"Matsukaze",k:"松風",t:"Vent dans les pins",z:"cou",l:"Côté droit du cou (jugulaire)",d:"Veine jugulaire, sur le côté droit du partenaire.",s:"Système vasculaire du cou.",a:"Shutō (tranchant de la main) ou coude (Hachikuken).",f:"Zone vasculaire ciblée par les étranglements.",v:"Selon les lignées, interchangeable avec Murasame.",y:"Le vent qui s'engouffre dans les pins : le flux du Ki dans le corps.",w:1,xy:[[91,67]]},
+{n:"Amado",k:"雨戸",t:"Volet de pluie",z:"cou",l:"Sous l'angle de la mâchoire, sur le côté du cou",d:"Bord avant du muscle sterno-cléido-mastoïdien, juste sous l'angle de la mâchoire (zone des ganglions).",s:"Sinus carotidien, nerf vague (X).",a:"Pouces (Boshiken) ou doigts en pince (Sanshitan), poussée vers le haut et l'intérieur.",e:"Takagi Yoshin-ryū",f:"La tête suit la pression : le partenaire se cambre, monte sur la pointe des pieds et perd ses appuis.",w:1,xy:[[88,61]]},
+{n:"Yōdan",k:"鷹断",t:"Tranchant du faucon",z:"cou",l:"Creux de la gorge, juste au-dessus du sternum",d:"Fourchette sternale. En Kotō-ryū, on vise plutôt les clavicules toutes proches.",a:"Shutō descendant (Kotō-ryū).",e:"Kotō-ryū",f:"Version Kotō-ryū : atteindre la clavicule pour neutraliser le bras.",v:"Hichō (« oiseau volant »).",w:1,xy:[[100,81]]},
+{n:"Sanko",k:"三鈷",t:"Trois pointes (vajra)",z:"cou",l:"Creux au-dessus de la clavicule",d:"Triangle interscalénique, sur le côté du cou juste au-dessus de la clavicule.",s:"Plexus brachial, artère sous-clavière.",a:"Shitōken ou Shukōken (griffe), mouvement descendant à 45° vers la colonne.",e:"Gyokko-ryū",f:"Décharge dans tout le bras : perte de force, la main lâche.",w:1,xy:[[80,80]]},
+{n:"Suigetsu",k:"水月",t:"Lune sur l'eau",z:"tronc",g:"sternum",l:"Le plexus solaire",d:"Creux juste sous la pointe du sternum.",a:"Koppōken, genou (Kōken).",e:"Takagi Yoshin-ryū",f:"Bloque le diaphragme et coupe le souffle, souvent juste avant une projection.",v:"Shinatsubo (« creux du cœur »).",y:"Le reflet de la lune sur l'eau calme : l'illusion de l'ego, qui se brise au moindre impact.",xy:[[100,145]]},
+{n:"Gekon",k:"下根",t:"Racine inférieure",z:"tronc",g:"sternum",l:"Pointe inférieure du sternum",d:"Appendice xiphoïde.",xy:[[100,132]]},
+{n:"Kimon",k:"鬼門",t:"Porte du démon",z:"tronc",l:"Sous les mamelons",d:"Sous les tétons : côté foie à droite, côté rate à gauche.",f:"Zone très invalidante, proche des organes.",v:"Ura Kimon : la face interne, sous les fausses côtes.",y:"En Onmyōdō, le Nord-Est d'où viennent les démons (Oni) : la faille par où la peur entre.",xy:[[84,129]]},
+{n:"Gorin",k:"五輪",t:"Cinq anneaux",z:"tronc",l:"Autour du nombril (5 points)",d:"Cinq points répartis autour du nombril.",a:"Sanshitan, Koppōken, Sokuyakuken (plante du pied).",f:"Tissus mous de l'abdomen.",v:"Tsukikage (« ombre de la lune », côté droit) et Inazuma (« éclair », côté gauche).",xy:[[100,174],[111,182],[107,196],[93,196],[89,182]]},
+{n:"Wakibara",k:"脇腹",t:"Le flanc",z:"tronc",l:"Les côtes flottantes, sur le côté du tronc",v:"Abara, Dainshu.",xy:[[66,170]]},
+{n:"Urin",k:"右輪",t:"Anneau droit",z:"tronc",l:"Sous les côtes, à droite (foie)",d:"Hypocondre droit, vers la 9e–10e côte.",s:"Foie, nerfs intercostaux inférieurs.",a:"Boshiken ou Koppōken, frappe horizontale de l'extérieur vers l'intérieur.",e:"Gyokko-ryū",f:"Le fameux « coup au foie » des boxeurs : les jambes ne portent plus.",xy:[[83,153]]},
+{n:"Saorin",k:"左輪",t:"Anneau gauche",z:"tronc",l:"Sous les côtes, à gauche (rate)",d:"Hypocondre gauche, vers la 9e–10e côte.",s:"Rate, nerfs intercostaux inférieurs.",a:"Boshiken ou Koppōken, frappe horizontale de l'extérieur vers l'intérieur.",e:"Gyokko-ryū",f:"Zone à haut risque : la rate est un organe fragile.",xy:[[117,153]]},
+{n:"Kiri",k:"奇理",z:"tronc",l:"Juste au-dessus du pubis",d:"Crête pubienne.",a:"Frappe plongeante ou pression forte.",e:"Gyokko-ryū",f:"Casse la posture et la marche.",xy:[[100,226]]},
+{n:"Jakukin",k:"弱筋",t:"Muscle faible",z:"tronc",l:"Le creux de l'aisselle",d:"Sommet du creux de l'aisselle, en profondeur derrière le grand pectoral.",s:"Nerfs médian et cubital, artère axillaire.",a:"Doigts en pince ou en crochet (Sanshitan), de bas en haut.",e:"Takagi Yoshin-ryū",f:"Le bras perd sa force : la saisie lâche.",v:"Tōna.",xy:[[62,107]]},
+{n:"Jūjiro",k:"十字路",t:"Le carrefour",z:"bras",l:"L'avant de l'épaule",d:"Nerf deltoïdien inférieur.",xy:[[66,96]]},
+{n:"Hoshi",k:"星",t:"L'étoile",z:"bras",l:"Sous le biceps, face interne",d:"Dessous du biceps, côté intérieur du bras.",v:"Dans l'enchaînement au Hanbō, le PDF l'associe à la zone de l'aisselle.",xy:[[56,135]]},
+{n:"Hoshizawa",k:"星沢",t:"Le ruisseau d'étoiles",z:"bras",g:"coude",l:"Intérieur du coude, côté petit doigt",d:"Nerf cubital, le fameux « petit juif ».",v:"Hoshishita : juste en dessous du pli.",xy:[[52,171]]},
+{n:"Shitō",k:"指頭",t:"Bout des doigts",z:"bras",g:"coude",l:"Pli intérieur du coude",d:"À l'intérieur de l'articulation du coude.",a:"Pression du pouce sur le nerf.",e:"Gyokko-ryū",f:"Ouvre instantanément la garde.",xy:[[155,169]]},
+{n:"Nagare",k:"流れ",t:"Le flux",z:"bras",l:"Avant-bras, juste sous le pli du coude (côté pouce)",d:"Muscle radial de l'avant-bras.",s:"Nerf radial.",a:"Boshiken ou tranchant de l'avant-bras ; arête du Hanbō.",e:"Gyokko-ryū",f:"Ouvre la garde et fait lâcher la main ; le buste bascule vers l'avant.",xy:[[38,187]]},
+{n:"Shikotsu",k:"指骨",t:"Os des doigts",z:"bras",l:"Le poignet, côté pouce",d:"Os radial entre le pouce et le poignet ; la face interne du poignet en Kukishinden-ryū.",a:"Clés de poignet ; pression ou levier avec le bâton.",e:"Kukishinden-ryū",f:"Contrôle du poignet, souvent pour finir au sol.",xy:[[32,238]]},
+{n:"Koe",k:"股",t:"L'aine",z:"jambes",l:"Le pli de l'aine",d:"Triangle de Scarpa, au centre du pli de l'aine.",s:"Nerf fémoral, artère fémorale, muscle psoas-iliaque.",a:"Genou (Kōken) ou pointe du pied.",e:"Takagi Yoshin-ryū",f:"La jambe ne peut plus s'étendre et le bassin recule : l'appui s'effondre.",xy:[[88,240]]},
+{n:"Sai",k:"塞",t:"L'obturateur",z:"jambes",l:"Face interne de la cuisse",d:"Zone musculaire à l'intérieur de la cuisse.",e:"Kotō-ryū",f:"Paralyse la jambe et fait chuter la structure.",v:"Usai, un peu plus bas vers le genou. ⚠ Dans la partie Kotō-ryū, le PDF place Sai au milieu du fémur, face externe.",xy:[[94,282]]},
+{n:"Shakutaku",k:"尺沢",t:"Milieu de la cuisse",z:"jambes",l:"Face externe de la cuisse",d:"Muscle externe de la cuisse (nerf sciatique poplité externe).",v:"Shimmei.",xy:[[128,284]]},
+{n:"Kusanagi",k:"草薙",t:"Faucheur d'herbe",z:"jambes",l:"Bas du tibia, au-dessus de la cheville (face interne)",d:"Tiers inférieur de la jambe, 3 à 5 cm au-dessus de la malléole interne.",s:"Périoste du tibia (os non protégé par le muscle), nerf tibial.",a:"Sokutōken (tranchant du pied) ou talon ; fauche du Hanbō.",e:"Kotō-ryū",f:"Douleur très vive : l'appui cède.",xy:[[90,412]]},
+{n:"Toki",k:"登木",t:"Arbre grimpant",z:"jambes",l:"Le dessus du pied",d:"Zone des métatarses.",s:"Nerfs métatarsiens.",a:"Talon (Sokuyakuken).",e:"Togakure-ryū",f:"Cloue l'adversaire sur place pour pouvoir fuir.",xy:[[78,437]]},
+{n:"Sōbu",k:"足歩",t:"La marche",z:"jambes",l:"Le mollet / l'arrière du genou",d:"Muscle du mollet ; en Kukishinden-ryū, le creux derrière le genou, laissé libre par l'armure.",e:"Kukishinden-ryū",f:"Fait plier la jambe ; en armure, le guerrier s'effondre sous son propre poids.",v:"Naika : le creux interne de la cheville.",back:1,xy:[[121,355]]}
+];
+
+const BODY=`<g class="sil">
+<path class="limb" stroke-width="17" d="M60,90 L44,170 L36,244"/>
+<path class="limb" stroke-width="17" d="M140,90 L156,170 L164,244"/>
+<path class="limb" stroke-width="26" d="M85,226 L81,330 L80,428"/>
+<path class="limb" stroke-width="26" d="M115,226 L119,330 L120,428"/>
+<path d="M62,86 Q100,74 138,86 Q147,92 145,112 L137,160 Q131,198 135,232 Q100,248 65,232 Q69,198 63,160 L55,112 Q53,92 62,86Z"/>
+<rect x="88" y="54" width="24" height="30" rx="6"/>
+<ellipse cx="100" cy="36" rx="21" ry="26"/>
+<ellipse cx="78.5" cy="39" rx="4" ry="7"/><ellipse cx="121.5" cy="39" rx="4" ry="7"/>
+<ellipse cx="33" cy="256" rx="8" ry="11"/><ellipse cx="167" cy="256" rx="8" ry="11"/>
+<ellipse cx="77" cy="440" rx="14" ry="7"/><ellipse cx="123" cy="440" rx="14" ry="7"/>
+</g>
+<g class="feat">
+<path d="M86,26 q5,-3 10,0 M104,26 q5,-3 10,0"/>
+<path d="M88,33 q3,-2 6,0 q-3,2 -6,0 M106,33 q3,-2 6,0 q-3,2 -6,0"/>
+<path d="M100,35 L98,44 Q100,46 102,44"/>
+<path d="M94,53 Q100,56 106,53"/>
+<path d="M73,85 Q86,89 98,83 M102,83 Q114,89 127,85"/>
+<path d="M100,92 L100,130"/>
+<path d="M100,132 Q90,150 76,162 M100,132 Q110,150 124,162"/>
+<path d="M68,226 Q82,236 94,250 M132,226 Q118,236 106,250"/>
+<path d="M76,326 q5,4 10,0 M114,326 q5,4 10,0"/>
+<circle class="f" cx="84" cy="119" r="1.3"/><circle class="f" cx="116" cy="119" r="1.3"/>
+<circle class="f" cx="100" cy="186" r="1.6"/>
+</g>`;
+
+/* ===== Progression ===== */
+const KEY="kyusho_quiz_v1";
+let S={ok:{},bad:{}};
+try{const s=JSON.parse(localStorage.getItem(KEY));if(s)S=Object.assign(S,s)}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const valid=(arr,obj)=>{const a=(arr||[]).filter(k=>k in obj);return a.length?a:Object.keys(obj)};
+let cfg={modes:new Set(valid(S.modes,MODES)),zones:new Set(valid(S.zones,ZONES))};
+let sess={n:0,good:0,streak:0,last:[]};
+let cur={};
+
+const $=s=>document.querySelector(s);
+const app=$("#app");
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const fam=z=>z==="cou"?"tete":z;
+const lc=s=>s.charAt(0).toLowerCase()+s.slice(1);
+
+/* ===== Silhouette ===== */
+function dots(p,r,cls=""){
+ return p.xy.map(([x,y])=>`<circle class="halo ${cls}" cx="${x}" cy="${y}" r="${r*2}"><animate attributeName="r" values="${r*1.2};${r*3};${r*1.2}" dur="1.6s" repeatCount="indefinite"/></circle><circle class="dot ${cls}" cx="${x}" cy="${y}" r="${r}"/>`).join("");
+}
+function svg(p,o={}){
+ const vb=ZONES[p.z].vb.split(" ").map(Number),W=vb[2],r=W*0.028;
+ let marks="";
+ if(o.tap){
+  cur.W=W;cur.cands=[];
+  P.forEach((q,j)=>q.xy.forEach(([x,y])=>{
+   if(x>=vb[0]&&x<=vb[0]+vb[2]&&y>=vb[1]&&y<=vb[1]+vb[3]){cur.cands.push({x,y,i:j});marks+=`<circle class="cand" cx="${x}" cy="${y}" r="${r}"/>`}
+  }));
+ } else marks=dots(p,r);
+ return `<div class="fig"><svg class="body" viewBox="${vb.join(" ")}" ${o.tap?'data-tap="1"':""}>${BODY}<g class="marks">${marks}</g></svg>
+ <div class="cap"><span>◀ sa droite</span>${p.back&&!o.tap?"<span>↺ derrière / sur le côté</span>":""}<span>sa gauche ▶</span></div></div>`;
+}
+function info(p){
+ const rows=[["Localisation",p.l],["Précision",p.d],["Structure visée",p.s],["Arme du corps",p.a],
+  ["École",p.e?`${p.e}<br><span class="mute small">${ECOLES[p.e]}</span>`:""],["Effet recherché",p.f],["Variantes",p.v],["Symbolique",p.y]];
+ let h='<dl class="info">'+rows.filter(r=>r[1]).map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join("")+"</dl>";
+ if(p.w)h+='<div class="warn">⚠ Tête / cou : pas de percussion au dojo, seulement une pose ou une pression lente et mesurée.</div>';
+ return h;
+}
+
+/* ===== Quiz ===== */
+function distract(i,key){
+ const p=P[i],ok=q=>q!==p&&!(p.g&&q.g===p.g)&&q[key]&&q[key]!==p[key];
+ const near=shuffle(P.filter(q=>ok(q)&&fam(q.z)===fam(p.z))),far=shuffle(P.filter(q=>ok(q)&&fam(q.z)!==fam(p.z)));
+ const out=[];
+ for(const q of near.concat(far)){if(!out.includes(q[key]))out.push(q[key]);if(out.length===3)break}
+ return out;
+}
+function wpick(arr){
+ const w=arr.map(i=>{const n=P[i].n;return(1+(S.bad[n]||0))/(1+(S.ok[n]||0))});
+ let t=w.reduce((a,b)=>a+b,0)*Math.random();
+ for(let k=0;k<arr.length;k++){t-=w[k];if(t<=0)return arr[k]}
+ return arr[arr.length-1];
+}
+const compat=(p,m)=>m==="ecole"?!!p.e:true;
+
+function bar(){
+ return `<header><button class="icon" id="home">←</button><div class="stats"><span>✓ <b id="sg">${sess.good}</b>/<b id="sn">${sess.n}</b></span><span>🔥 <b id="ss">${sess.streak}</b></span></div></header>`;
+}
+function nextQ(){
+ const pool=P.map((p,i)=>i).filter(i=>cfg.zones.has(P[i].z));
+ for(const m of shuffle([...cfg.modes])){
+  const c=pool.filter(i=>compat(P[i],m));
+  if(!c.length)continue;
+  const recent=c.length>6?sess.last:sess.last.slice(-1);
+  let c2=c.filter(i=>!recent.includes(i));if(!c2.length)c2=c;
+  const i=wpick(c2);
+  sess.last.push(i);if(sess.last.length>4)sess.last.shift();
+  cur={i,m};return renderQ();
+ }
+ cur={i:pool[0],m:"nom"};renderQ();
+}
+function renderQ(){
+ const p=P[cur.i],m=cur.m;
+ cur.done=false;
+ let head="",body="";
+ if(m==="loc")head=`<p class="prompt">Où se trouve <b>${p.n}</b> ?</p><div class="kanji">${p.k}</div>`;
+ else if(m==="nom")head=`<p class="mute">Quel point se trouve ici ?</p><p class="big">${p.l}</p>`;
+ else if(m==="corps"){head=`<p class="prompt">Quel est ce point ?</p>`;body=svg(p)}
+ else if(m==="tap"){head=`<p class="prompt">Touche <b>${p.n}</b> <span class="kj">${p.k}</span></p><p class="mute small">Choisis parmi les points blancs.</p>`;body=svg(p,{tap:1})}
+ else if(m==="ecole")head=`<p class="prompt">À quelle école ton cours associe <b>${p.n}</b> ?</p><p class="mute">${p.l}</p>`;
+ let h=bar()+`<div class="card"><div class="qhead"><div><div class="tag">${MODES[m]}</div>${head}</div>${ninja(pick(NJ_MODE[m]))}</div>${body}</div>`;
+ if(m!=="tap"){
+  let ans,opts;
+  if(m==="loc"){ans=p.l;opts=[ans,...distract(cur.i,"l")]}
+  else if(m==="ecole"){ans=p.e;opts=[ans,...shuffle(Object.keys(ECOLES).filter(e=>e!==ans)).slice(0,3)]}
+  else{ans=p.n;opts=[ans,...distract(cur.i,"n")]}
+  cur.ans=ans;cur.opts=shuffle(opts);
+  h+=`<div class="opts">${cur.opts.map((o,k)=>`<button class="opt" data-v="${k}">${o}</button>`).join("")}</div>`;
+ }
+ h+='<div id="rev"></div>';
+ app.innerHTML=h;window.scrollTo(0,0);
+ $("#home").onclick=home;
+ document.querySelectorAll(".opt").forEach(b=>b.onclick=()=>choose(b));
+ if(m==="tap")bindTap();
+}
+function choose(b){
+ if(cur.done)return;cur.done=true;
+ const v=cur.opts[+b.dataset.v],ok=v===cur.ans;
+ document.querySelectorAll(".opt").forEach(x=>{x.disabled=true;const vv=cur.opts[+x.dataset.v];if(vv===cur.ans)x.classList.add("ok");else if(x===b)x.classList.add("ko")});
+ let why="";
+ if(!ok){
+  if(cur.m==="loc"){const q=P.find(x=>x.l===v);if(q)why=`Cette localisation, c'est <b>${q.n}</b>.`}
+  else if(cur.m!=="ecole"){const q=P.find(x=>x.n===v);if(q)why=`<b>${q.n}</b> se trouve : ${lc(q.l)}.`}
+ }
+ finish(ok,why);
+}
+function bindTap(){
+ const s=document.querySelector("svg[data-tap]");
+ s.addEventListener("click",e=>{
+  if(cur.done)return;
+  const pt=s.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;
+  const q=pt.matrixTransform(s.getScreenCTM().inverse());
+  let best=null,bd=Infinity;
+  cur.cands.forEach(c=>{const d=Math.hypot(c.x-q.x,c.y-q.y);if(d<bd){bd=d;best=c}});
+  if(!best||bd>cur.W*0.1)return;
+  cur.done=true;
+  const ok=best.i===cur.i,p=P[cur.i],r=cur.W*0.028;
+  s.querySelector(".marks").insertAdjacentHTML("beforeend",(ok?"":`<circle class="pick" cx="${best.x}" cy="${best.y}" r="${r*1.9}"/>`)+dots(p,r,"good"));
+  finish(ok,ok?"":`Tu as touché <b>${P[best.i].n}</b> : ${lc(P[best.i].l)}.`);
+ });
+}
+function finish(ok,why){
+ const p=P[cur.i],k=p.n;
+ sess.n++;if(ok){sess.good++;sess.streak++}else sess.streak=0;
+ S.ok[k]=ok?(S.ok[k]||0)+1:0;
+ S.bad[k]=ok?Math.max(0,(S.bad[k]||0)-1):Math.min(4,(S.bad[k]||0)+2);
+ save();
+ $("#sg").textContent=sess.good;$("#sn").textContent=sess.n;$("#ss").textContent=sess.streak;
+ const mastered=ok&&S.ok[k]===3;
+ const showFig=!["corps","tap"].includes(cur.m);
+ const rev=$("#rev");
+ rev.innerHTML=`<div class="card reveal ${ok?"good":"bad"}">
+  <div class="vrow"><div><div class="verdict">${ok?"✓ Bonne réponse":"✗ Raté"}${mastered?" · point maîtrisé ⭐":""}</div>${why?`<p class="why">${why}</p>`:""}</div>${ninja(mastered?"medit":ok?"joie":"ko",56)}</div>
+  <div class="rh"><div><div class="rn">${p.n}</div>${p.t?`<div class="mute">« ${p.t} »</div>`:""}</div><div class="kanji">${p.k}</div></div>
+  ${showFig?svg(p):""}${info(p)}</div>
+  <button class="btn next" id="nx">Question suivante →</button>`;
+ $("#nx").onclick=nextQ;
+ const top=rev.getBoundingClientRect().top-window.innerHeight*0.45;
+ if(top>0)window.scrollBy({top,behavior:"smooth"});
+}
+
+/* ===== Écrans ===== */
+const chip=(k,label,set)=>`<button class="chip ${set.has(k)?"on":""}" data-k="${k}">${label}</button>`;
+function bindChips(id,set){
+ document.querySelectorAll("#"+id+" .chip").forEach(b=>b.onclick=()=>{
+  const k=b.dataset.k;
+  if(set.has(k)){if(set.size>1){set.delete(k);b.classList.remove("on")}}else{set.add(k);b.classList.add("on")}
+  S.modes=[...cfg.modes];S.zones=[...cfg.zones];save();
+ });
+}
+function home(){
+ const m=P.filter(p=>(S.ok[p.n]||0)>=3).length;
+ app.innerHTML=`<header><h1>急所 <span>Kyūsho</span></h1>${ninja("saut",56)}</header>
+ <div class="card"><p class="mute">Apprends les points vitaux de ton cours : où ils se trouvent, leur nom et leur école. Les points ratés reviennent plus souvent, et la fiche complète s'affiche après chaque réponse.</p>
+ <div class="prog"><div style="width:${m/P.length*100}%"></div></div>
+ <p class="mute small">${m} / ${P.length} points maîtrisés (3 bonnes réponses d'affilée)</p></div>
+ <div class="card"><div class="tag">Types de questions</div><div class="chips" id="cm">${Object.entries(MODES).map(([k,v])=>chip(k,v,cfg.modes)).join("")}</div>
+ <div class="tag" style="margin-top:16px">Zones du corps</div><div class="chips" id="cz">${Object.entries(ZONES).map(([k,v])=>chip(k,v.label,cfg.zones)).join("")}</div></div>
+ <button class="btn" id="go">Commencer</button>
+ <button class="btn sec" id="lx">Lexique des points</button>
+ <button class="link" id="rs">Remettre la progression à zéro</button>`;
+ bindChips("cm",cfg.modes);bindChips("cz",cfg.zones);
+ $("#go").onclick=()=>{sess={n:0,good:0,streak:0,last:[]};nextQ()};
+ $("#lx").onclick=lexique;
+ $("#rs").onclick=()=>{if(confirm("Effacer toute ta progression ?")){S.ok={};S.bad={};save();home()}};
+}
+function lexique(){
+ let h=`<header><button class="icon" id="home">←</button><h1 style="font-size:19px">Lexique</h1><span style="width:44px"></span></header>`;
+ for(const [z,Z] of Object.entries(ZONES)){
+  const list=P.filter(p=>p.z===z);if(!list.length)continue;
+  h+=`<div class="tag zt">${Z.label}</div>`+list.map(p=>`<details class="card lx"><summary><div class="rh0"><div><b>${p.n}</b> <span class="kj">${p.k}</span><div class="mute small">${p.l}</div></div><span class="mute">${(S.ok[p.n]||0)>=3?"⭐":"›"}</span></div></summary>${svg(p)}${info(p)}</details>`).join("");
+ }
+ app.innerHTML=h;window.scrollTo(0,0);$("#home").onclick=home;
+}
+home();
+</script>
+</body>
+</html>
