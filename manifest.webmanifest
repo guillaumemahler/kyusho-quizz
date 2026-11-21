@@ -1,0 +1,12 @@
+{
+  "name": "Kyūsho – Quiz",
+  "short_name": "Kyūsho",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#14110f",
+  "theme_color": "#14110f",
+  "icons": [
+    { "src": "icon.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
